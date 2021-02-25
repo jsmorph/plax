@@ -58,8 +58,8 @@ func TestMock(t *testing.T) {
 		t.Fatal(msg.Payload)
 	}
 
-	if err = c.Kill(ctx); err == nil {
-		t.Fatal("should have complained")
+	if err = c.Kill(ctx); err != nil {
+		t.Fatal(err)
 	}
 
 }

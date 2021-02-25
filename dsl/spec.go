@@ -64,6 +64,7 @@ type Phase struct {
 	Steps []*Step
 }
 
+// AddStep adds the given step to the Phase.
 func (p *Phase) AddStep(ctx *Ctx, s *Step) {
 	steps := p.Steps
 	if steps == nil {
@@ -72,6 +73,8 @@ func (p *Phase) AddStep(ctx *Ctx, s *Step) {
 	p.Steps = append(steps, s)
 }
 
+// Exec steps through the Phase and returns the name of the next Phase
+// (if any).
 func (p *Phase) Exec(ctx *Ctx, t *Test) (string, error) {
 	var (
 		next string
@@ -118,13 +121,20 @@ type Step struct {
 	Recv      *Recv      `yaml:",omitempty"`
 	Kill      *Kill      `yaml:",omitempty"`
 	Reconnect *Reconnect `yaml:",omitempty"`
-	Run       string     `yaml:",omitempty"`
+
+	// Run (if any) is arbitrary Javascript.
+	//
+	// Any returned value is ignored.
+	Run string `yaml:",omitempty"`
 
 	// Wait is wait time in milliseconds as a string.
 	Wait string `yaml:",omitempty"`
 
+	// Goto name the next phase to execute.
 	Goto string `yaml:",omitempty"`
 
+	// Branch (if any) should be Javascript code that returns the
+	// name for the next phase.
 	Branch string `yaml:",omitempty"`
 
 	Ingest *Ingest `yaml:",omitempty"`
@@ -333,6 +343,7 @@ func Wait(ctx *Ctx, durationString string) error {
 	return nil
 }
 
+// Pub is a Step that publishes a message to a channel.
 type Pub struct {
 	Chan  string
 	Topic string
@@ -432,6 +443,7 @@ func (p *Pub) Exec(ctx *Ctx, t *Test) error {
 
 }
 
+// Sub is a step that subscribes to a topic on a channel.
 type Sub struct {
 	Chan  string
 	Topic string
@@ -469,6 +481,7 @@ func (s *Sub) Exec(ctx *Ctx, t *Test) error {
 	return s.ch.Sub(ctx, s.Topic)
 }
 
+// Recv is a Step that receives a message from a channel.
 type Recv struct {
 	Chan  string
 	Topic string
@@ -883,6 +896,7 @@ func (r *Recv) Exec(ctx *Ctx, t *Test) error {
 	return fmt.Errorf("impossible!")
 }
 
+// Kill is a Step that kills a channel unceremoniously.
 type Kill struct {
 	Chan string
 
@@ -899,6 +913,7 @@ func (p *Kill) Exec(ctx *Ctx, t *Test) error {
 	return p.ch.Kill(ctx)
 }
 
+// Reconnect is a Step that attempts to re-open a channel.
 type Reconnect struct {
 	Chan string
 
@@ -915,6 +930,10 @@ func (p *Reconnect) Exec(ctx *Ctx, t *Test) error {
 	return p.ch.Open(ctx)
 }
 
+// Ingest is a utility step to put a message in a channels out-bound
+// message queue (destined to be received by the test).
+//
+// This Step is probably only useful for demos.
 type Ingest struct {
 	Chan    string
 	Topic   string
@@ -971,15 +990,7 @@ func (i *Ingest) Exec(ctx *Ctx, t *Test) error {
 	return i.ch.To(ctx, m)
 }
 
-type Exec struct {
-	Process
-	Pattern interface{}
-}
-
-func (e *Exec) Exec(ctx *Ctx, t *Test) error {
-	panic("todo")
-}
-
+// CopyBindings makes a shallow copy of the given bindings.
 func CopyBindings(bs map[string]interface{}) map[string]interface{} {
 	if bs == nil {
 		return make(map[string]interface{})
@@ -991,6 +1002,7 @@ func CopyBindings(bs map[string]interface{}) map[string]interface{} {
 	return acc
 }
 
+// jsEnv generates a the standard environment for Javascript execution.
 func (t *Test) jsEnv(ctx *Ctx) map[string]interface{} {
 	bs := CopyBindings(t.Bindings)
 	return map[string]interface{}{

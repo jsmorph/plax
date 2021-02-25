@@ -20,6 +20,7 @@ package dsl
 
 import (
 	"bufio"
+	"fmt"
 	"io"
 	"strings"
 	"time"
@@ -34,7 +35,8 @@ func init() {
 // This channel type is mostly used for testing.  A message published
 // to a mock channel is simply emitted as is (for test to receive).
 type MockChan struct {
-	c chan Msg
+	c      chan Msg
+	killed bool
 }
 
 func NewMockChan(ctx *Ctx, _ interface{}) (Chan, error) {
@@ -54,6 +56,7 @@ func (c *MockChan) Kind() ChanKind {
 }
 
 func (c *MockChan) Open(ctx *Ctx) error {
+	c.killed = false
 	return nil
 }
 
@@ -61,9 +64,17 @@ func (c *MockChan) Close(ctx *Ctx) error {
 	return nil
 }
 
+// live returns an error if c.killed or nil otherwise.
+func (c *MockChan) live() error {
+	if c.killed {
+		return fmt.Errorf("channel was killed previously")
+	}
+	return nil
+}
+
 func (c *MockChan) Sub(ctx *Ctx, topic string) error {
 	ctx.Logf("MockChan Sub %s", topic)
-	return nil
+	return c.live()
 }
 
 func (c *MockChan) Pub(ctx *Ctx, m Msg) error {
@@ -74,16 +85,24 @@ func (c *MockChan) Pub(ctx *Ctx, m Msg) error {
 
 func (c *MockChan) Recv(ctx *Ctx) chan Msg {
 	ctx.Logf("MockChan Recv")
+	// ToDo: Deal will a killed mock channel?
 	return c.c
 }
 
 func (c *MockChan) Kill(ctx *Ctx) error {
-	return Brokenf("Kill is not supported by a %T", c)
+	if err := c.live(); err != nil {
+		return err
+	}
+	c.killed = true
+	return nil
 }
 
 func (c *MockChan) To(ctx *Ctx, m Msg) error {
 	ctx.Logf("MockChan To topic %s", m.Topic)
 	ctx.Logdf("            payload %s", m.Payload)
+	if err := c.live(); err != nil {
+		return err
+	}
 	m.ReceivedAt = time.Now().UTC()
 	select {
 	case <-ctx.Done():

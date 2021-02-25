@@ -121,15 +121,70 @@ func TestBasic(t *testing.T) {
 	}
 
 	run(t, ctx, tst)
-
 }
 
-func runTest(t *testing.T, ctx *Ctx, tst *Test) error {
-	if err := tst.Init(ctx); err != nil {
-		t.Fatal(err)
-	}
+func TestKills(t *testing.T) {
 
-	return tst.Run(ctx)
+	ctx, s, tst := newTest(t)
+
+	p := &Phase{}
+
+	s.Phases["phase1"] = p
+
+	addMock(t, ctx, p)
+
+	p.AddStep(ctx, &Step{
+		Pub: &Pub{
+			Payload: `{"want":"tacos"}`,
+		},
+	})
+
+	p.AddStep(ctx, &Step{
+		Recv: &Recv{
+			Pattern: `{"want":"?*x"}`,
+			Timeout: time.Second,
+		},
+	})
+
+	p.AddStep(ctx, &Step{
+		Kill: &Kill{},
+	})
+
+	run(t, ctx, tst)
+}
+
+func TestReconnect(t *testing.T) {
+
+	ctx, s, tst := newTest(t)
+
+	p := &Phase{}
+
+	s.Phases["phase1"] = p
+
+	addMock(t, ctx, p)
+
+	p.AddStep(ctx, &Step{
+		Kill: &Kill{},
+	})
+
+	p.AddStep(ctx, &Step{
+		Reconnect: &Reconnect{},
+	})
+
+	p.AddStep(ctx, &Step{
+		Pub: &Pub{
+			Payload: `{"want":"tacos"}`,
+		},
+	})
+
+	p.AddStep(ctx, &Step{
+		Recv: &Recv{
+			Pattern: `{"want":"?*x"}`,
+			Timeout: time.Second,
+		},
+	})
+
+	run(t, ctx, tst)
 }
 
 func MustParseJSON(js string) interface{} {
@@ -178,6 +233,33 @@ func TestFails(t *testing.T) {
 
 	run(t, ctx, tst)
 
+}
+
+func TestWaitSad(t *testing.T) {
+
+	ctx, s, tst := newTest(t)
+
+	{
+		p := &Phase{}
+
+		s.Phases["phase1"] = p
+
+		addMock(t, ctx, p)
+
+		p.AddStep(ctx, &Step{
+			Wait: "salsa",
+		})
+	}
+
+	if err := tst.Init(ctx); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := tst.Run(ctx); err == nil {
+		t.Fatal("should have complained")
+	} else if _, is := IsBroken(err); !is {
+		t.Fatalf("expected Broken but got %T %v", err, err)
+	}
 }
 
 func TestValidateSchema(t *testing.T) {
