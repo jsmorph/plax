@@ -50,13 +50,28 @@ func (bs *Bindings) Copy() (*Bindings, error) {
 	return &ret, nil
 }
 
-// String returns a string representation (required for parameters).
+// String returns a string representation.
+//
+// This method is required for flag.Value.
 func (bs *Bindings) String() string {
-	return "PARAM=VALUE"
+	if bs == nil {
+		return ""
+	}
+	acc := make([]string, 0, len(*bs))
+	for k, v := range *bs {
+		js, err := json.Marshal(&v)
+		if err != nil {
+			js = []byte(fmt.Sprintf("%#v", v))
+		}
+		acc = append(acc, fmt.Sprintf("%s=%s", k, js))
+	}
+	return strings.Join(acc, " ")
 }
 
-// SetKeyValue to set the binding key to the given JSON value.
-func (bs *Bindings) SetKeyValue(key string, value string) {
+// SetKeyJSONValue to set the binding key to the given JSON value.
+//
+// If the value isn't JSON, the literal value is used.
+func (bs *Bindings) SetKeyJSONValue(key string, value string) {
 	var v interface{}
 	if err := json.Unmarshal([]byte(value), &v); err != nil {
 		v = value
@@ -66,13 +81,15 @@ func (bs *Bindings) SetKeyValue(key string, value string) {
 }
 
 // Set the parameter key=value pair.
+//
+// This method is required for flag.Value.
 func (bs *Bindings) Set(value string) error {
 	pv := strings.SplitN(value, "=", 2)
 	if len(pv) != 2 {
 		return fmt.Errorf("bad binding: '%s'", value)
 	}
 
-	bs.SetKeyValue(pv[0], pv[1])
+	bs.SetKeyJSONValue(pv[0], pv[1])
 
 	return nil
 }
@@ -333,59 +350,57 @@ func (bs *Bindings) Bind(ctx *Ctx, x interface{}) interface{} {
 	return bs.replaceBindings(ctx, x)
 }
 
-// walk is not used.
-func walk(ctx *Ctx, x interface{}, f func(ctx *Ctx, x interface{}) (interface{}, error), limit int) (interface{}, error) {
-	if limit <= 0 {
-		return nil, Brokenf("walk() took too many steps")
-	}
-
-	switch vv := x.(type) {
-	case map[string]interface{}:
-		acc := make(map[string]interface{}, len(vv))
-		for k, v := range vv {
-			k1, err := f(ctx, k)
-			if err != nil {
-				return nil, err
-			}
-			s, is := k1.(string)
-			if !is {
-				return nil, Brokenf("tried to set a %T map key (%#v)", k1, k1)
-			}
-			v1, err := walk(ctx, v, f, limit-1)
-			if err != nil {
-				return nil, err
-			}
-			if v1 != nil {
-				acc[s] = v1
-			}
-		}
-		return acc, nil
-	case string:
-		x, err := f(ctx, vv)
-		if err != nil {
-			return nil, err
-		}
-		if s, is := x.(string); is && s == vv {
-			// Nothing changed, so stop now.
-			return s, nil
-		}
-		y, err := walk(ctx, x, f, limit-1)
-		if err != nil {
-			return nil, err
-		}
-		return y, nil
-	case []interface{}:
-		acc := make([]interface{}, len(vv))
-		for i, x := range vv {
-			x1, err := walk(ctx, x, f, limit-1)
-			if err != nil {
-				return nil, err
-			}
-			acc[i] = x1
-		}
-		return acc, nil
-	default:
-		return x, nil
-	}
-
-}
+// func walk(ctx *Ctx, x interface{}, f func(ctx *Ctx, x interface{}) (interface{}, error), limit int) (interface{}, error) {
+// 	if limit <= 0 {
+// 		return nil, Brokenf("walk() took too many steps")
+// 	}
+//
+// 	switch vv := x.(type) {
+// 	case map[string]interface{}:
+// 		acc := make(map[string]interface{}, len(vv))
+// 		for k, v := range vv {
+// 			k1, err := f(ctx, k)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			s, is := k1.(string)
+// 			if !is {
+// 				return nil, Brokenf("tried to set a %T map key (%#v)", k1, k1)
+// 			}
+// 			v1, err := walk(ctx, v, f, limit-1)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			if v1 != nil {
+// 				acc[s] = v1
+// 			}
+// 		}
+// 		return acc, nil
+// 	case string:
+// 		x, err := f(ctx, vv)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		if s, is := x.(string); is && s == vv {
+// 			// Nothing changed, so stop now.
+// 			return s, nil
+// 		}
+// 		y, err := walk(ctx, x, f, limit-1)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		return y, nil
+// 	case []interface{}:
+// 		acc := make([]interface{}, len(vv))
+// 		for i, x := range vv {
+// 			x1, err := walk(ctx, x, f, limit-1)
+// 			if err != nil {
+// 				return nil, err
+// 			}
+// 			acc[i] = x1
+// 		}
+// 		return acc, nil
+// 	default:
+// 		return x, nil
+// 	}
+// }

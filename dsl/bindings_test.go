@@ -26,6 +26,66 @@ import (
 	"testing"
 )
 
+// TestBindingsValue test the Bindings methods for implementing
+// flag.Value.
+func TestBindingsValue(t *testing.T) {
+	bs := NewBindings()
+
+	bs.Set(`want="queso"`)
+	bs.Set(`like=tacos`)
+	bs.String()
+
+	x, have := bs["want"]
+	if !have {
+		t.Fatal("lost 'want'")
+	}
+	s, is := x.(string)
+	if !is {
+		t.Fatalf("x is a %T", x)
+	}
+	if s != "queso" {
+		t.Fatal(s)
+	}
+}
+
+func TestBindingsCopy(t *testing.T) {
+	bs0 := NewBindings()
+	bs0["want"] = "queso"
+	bs1, err := bs0.Copy()
+	if err != nil {
+		t.Fatal(err)
+	}
+	(*bs1)["want"] = "tacos"
+
+	{
+		x, have := bs0["want"]
+		if !have {
+			t.Fatal("lost 'want'")
+		}
+		s, is := x.(string)
+		if !is {
+			t.Fatalf("x is a %T", x)
+		}
+		if s != "queso" {
+			t.Fatal(s)
+		}
+	}
+
+	{
+		x, have := (*bs1)["want"]
+		if !have {
+			t.Fatal("lost 'want'")
+		}
+		s, is := x.(string)
+		if !is {
+			t.Fatalf("x is a %T", x)
+		}
+		if s != "tacos" {
+			t.Fatal(s)
+		}
+	}
+}
+
 func TestSubstitute(t *testing.T) {
 	var (
 		ctx = NewCtx(context.Background())
@@ -181,4 +241,24 @@ func TestSubstituteOnce(t *testing.T) {
 			t.Fatal("?need")
 		}
 	})
+}
+
+func TestAtAtSub(t *testing.T) {
+	var (
+		x      = "Some Go source code: {@@bindings_test.go}"
+		ctx    = NewCtx(context.Background())
+		y, err = atAtSub(ctx, x)
+	)
+
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	if !strings.Contains(y, "TestAtAtSub") {
+		n := len(y)
+		if 80 < n {
+			y = y[0:80] + "..."
+		}
+		t.Fatal(y)
+	}
 }

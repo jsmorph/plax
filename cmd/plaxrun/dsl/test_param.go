@@ -59,7 +59,7 @@ func (tpm TestParamMap) bind(ctx *plaxDsl.Ctx, bs *plaxDsl.Bindings) error {
 		if err != nil {
 			return fmt.Errorf("failed to substitute test parameter: %w", err)
 		}
-		bs.SetKeyValue(tpk, pv)
+		bs.SetKeyJSONValue(tpk, pv)
 	}
 
 	return nil
