@@ -538,6 +538,8 @@ type Recv struct {
 	//
 	Guard string `json:",omitempty" yaml:",omitempty"`
 
+	// Run is optional Javascript run after a successful match and
+	// after the Guard (if any) is satisfied.
 	Run string `json:",omitempty" yaml:",omitempty"`
 
 	// Schema is an optional URI for a JSON Schema that's used to
@@ -734,8 +736,9 @@ func (r *Recv) Exec(ctx *Ctx, t *Test) error {
 					// (with topic and deserialized
 					// payload).
 					target = map[string]interface{}{
-						"Topic":   m.Topic,
-						"Payload": target,
+						"Topic":      m.Topic,
+						"Payload":    target,
+						"ReceivedAt": m.ReceivedAt,
 					}
 				default:
 					return Brokenf("bad Recv Target: '%s'", r.Target)

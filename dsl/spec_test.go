@@ -21,6 +21,7 @@ package dsl
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 	"testing"
 	"time"
 )
@@ -115,6 +116,21 @@ func TestBasic(t *testing.T) {
 			Recv: &Recv{
 				Pattern: `{"want":"?*x"}`,
 				Timeout: time.Second,
+				Run:     `test.Bindings["?X"] = "salsa";`,
+			},
+		})
+
+		p.AddStep(ctx, &Step{
+			Pub: &Pub{
+				Payload: `{"want":"salsa"}`,
+			},
+		})
+
+		p.AddStep(ctx, &Step{
+			Recv: &Recv{
+				Pattern: `{"want":"?*x"}`,
+				Guard:   `return bs["?*x"] == test.Bindings["?X"];`,
+				Timeout: time.Second,
 			},
 		})
 
@@ -180,6 +196,35 @@ func TestReconnect(t *testing.T) {
 	p.AddStep(ctx, &Step{
 		Recv: &Recv{
 			Pattern: `{"want":"?*x"}`,
+			Timeout: time.Second,
+		},
+	})
+
+	run(t, ctx, tst)
+}
+
+func TestMsgMatch(t *testing.T) {
+
+	ctx, s, tst := newTest(t)
+	ctx.LogLevel = "debug"
+
+	p := &Phase{}
+
+	s.Phases["phase1"] = p
+
+	addMock(t, ctx, p)
+
+	p.AddStep(ctx, &Step{
+		Pub: &Pub{
+			Topic:   "orders",
+			Payload: `{"order":"tacos"}`,
+		},
+	})
+
+	p.AddStep(ctx, &Step{
+		Recv: &Recv{
+			Target:  "message",
+			Pattern: `{"Topic":"?topic","Payload":{"order":"?*x"},"ReceivedAt":"?then"}`,
 			Timeout: time.Second,
 		},
 	})
@@ -258,7 +303,11 @@ func TestWaitSad(t *testing.T) {
 	if err := tst.Run(ctx); err == nil {
 		t.Fatal("should have complained")
 	} else if _, is := IsBroken(err); !is {
-		t.Fatalf("expected Broken but got %T %v", err, err)
+		t.Fatalf("expected Broken but got %T %s", err, err)
+	} else {
+		if !strings.Contains(err.Error(), err.Err.Error()) {
+			t.Fatal(err)
+		}
 	}
 }
 

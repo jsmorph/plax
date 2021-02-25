@@ -97,7 +97,7 @@ type Test struct {
 
 	// Retries is an optional retry specification.
 	//
-	// This data isn't actually used in the code here.  Instead,
+	// This data isn't actually used in this package.  Instead,
 	// this data is here to make it easy for a test to specify its
 	// own retry policy (if any).  Actual implementation provided
 	// by invoke.Run().
@@ -168,8 +168,15 @@ func HappyTerminalPhase(name string) bool {
 // Errors collects errors from the main test as well as from final
 // phase executions.
 type Errors struct {
-	InitErr     error
-	Err         error
+	// InitErr is an error that occured when initializing the
+	// test.
+	InitErr error
+
+	// Err is an error that occured during test execution.
+	Err error
+
+	// Final errors collects any errors encountered when executing
+	// "finally" code.
 	FinalErrors map[string]error
 }
 

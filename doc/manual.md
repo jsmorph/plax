@@ -511,8 +511,8 @@ single operation.  Currently the following steps are supported:
 		
 		By default, only the payload is matched.  If `target` is
        	"message", then matching is performed against
-       	`{"Topic":TOPIC,"Payload":PAYLOAD}` which allows matching
-       	based on the topic of in-bound messages.
+       	`{"Topic":TOPIC,"Payload":PAYLOAD,"ReceivedAt:"YYYY-MM-DDTHH:MM:SS.SSSSZ"}`
+       	which allows matching based on the topic of in-bound messages.
 		
 	1. `guard`: <a href="https://en.wikipedia.org/wiki/Guard_(computer_science)">Guard</a>
 	    is optional Javascript that should return a boolean to
@@ -619,11 +619,6 @@ single operation.  Currently the following steps are supported:
 
     1. `chan`: The name for the channel for this step.
 	
-1. `exec`: Run a command.  Structure is the same as for an `initially`
-    command.  See [`exec.yaml`](../demos/exec.yaml) for a simple
-    example.  Parameters and bindings
-    [substitution](#substitutions) applies.
-   
 1. `reconnect`: Attempt to reconnect the channel (even if still connected).
 
     1. `chan`: The name for the channel for this step.
