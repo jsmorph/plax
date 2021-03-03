@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
+	"plugin"
+	"strings"
 	"time"
 
 	_ "github.com/Comcast/plax/chans/std"
@@ -64,13 +66,23 @@ func main() {
 		testSuiteName     = flag.String("test-suite", "NA", "Name for JUnit test suite")
 		logLevel          = flag.String("log", "info", "log level (info, debug, none)")
 		retry             = flag.String("retry", "", `Specify retries: number or {"N":N,"Delay":"1s","DelayFactor":1.5}`)
+
+		plugins Strings
 	)
 
 	flag.Var(&bindings, "p", "Parameter values: PARAM=VALUE")
 	flag.Var(&includeDirs, "I", "YAML include directories")
+	flag.Var(&plugins, "plugin", "Go plugin")
 
 	flag.Parse()
 
+	for _, s := range plugins {
+		log.Printf("ppening plugin %s", s)
+		_, err := plugin.Open(s)
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
 	log.Printf("plax version %s", Version)
 
 	if *version {
@@ -129,4 +141,15 @@ type JSONTestSuite struct {
 	Passed int
 	Failed int
 	Errors int
+}
+
+type Strings []string
+
+func (i *Strings) String() string {
+	return strings.Join(*i, ",")
+}
+
+func (i *Strings) Set(value string) error {
+	*i = append(*i, value)
+	return nil
 }

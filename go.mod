@@ -12,6 +12,7 @@ require (
 	github.com/dop251/goja v0.0.0-20210114204047-983fa61a23a8
 	github.com/eclipse/paho.mqtt.golang v1.3.1
 	github.com/harlow/kinesis-consumer v0.3.4
+	github.com/kennysong/goeliza v0.0.0-20160420092726-bdfccfe37f9c // indirect
 	github.com/xeipuuv/gojsonschema v1.2.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 )

@@ -1,0 +1,32 @@
+doc: |
+  Demonstration of using a Go plugin to implement a channel type.
+
+  Run with
+  
+    (cd chans/eliza/plugin/ && go build -buildmode=plugin -o eliza.so)
+    plax -test demos/eliza.yaml -log debug -plugin chans/eliza/plugin/eliza.so
+    
+spec:
+  phases:
+    phase1:
+      steps:
+        - pub:
+            payload:
+              make:
+                name: eliza
+                type: eliza
+        - recv:
+            chan: mother
+            serialization: string
+            pattern:
+              success: true
+        - pub:
+            serialization: string
+            payload: |
+              I sure do like queso.
+        - recv:
+            serialization: string
+            regexp: ".*"
+            guard: |
+              print(msg);
+              return true

@@ -47,6 +47,8 @@ github.com/jmespath/go-jmespath v0.4.0/go.mod h1:T8mJZnbsbmF+m6zOOFylbeCJqk5+pHW
 github.com/jmespath/go-jmespath/internal/testify v1.5.1 h1:shLQSRRSCCPj3f2gpwzGwWFoC7ycTf1rcQZHOlsJ6N8=
 github.com/jmespath/go-jmespath/internal/testify v1.5.1/go.mod h1:L3OGu8Wl2/fWfCI6z80xFu9LTZmf1ZRjMHUOPmWr69U=
 github.com/jsccast/yaml v0.0.0-20171213031114-31aa0bbd42f2/go.mod h1:fyktCuIsvb3ovBTwCPTDoYkZ2hs7xg3AnIEsNXS2o/k=
+github.com/kennysong/goeliza v0.0.0-20160420092726-bdfccfe37f9c h1:s89TJyYVpfy2nojEfB1jofgigsMkocfrqEo3DEecBFA=
+github.com/kennysong/goeliza v0.0.0-20160420092726-bdfccfe37f9c/go.mod h1:gxpf70sPu78g8IPauVfLCiT7sgwo3hWf+QIdqRjDbyo=
 github.com/kr/pretty v0.2.1 h1:Fmg33tUaq4/8ym9TJN1x7sLJnHVwhP33CNkpYV/7rwI=
 github.com/kr/pretty v0.2.1/go.mod h1:ipq/a2n7PKx3OHsz4KJII5eveXtPO4qwEXGdVfWzfnI=
 github.com/kr/pty v1.1.1/go.mod h1:pFQYn66WHrOpPYNljwOMqo10TkYh1fy3cYio2l3bCsQ=
