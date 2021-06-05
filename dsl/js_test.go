@@ -92,4 +92,20 @@ bss[0]["?x"] == "queso";
 		}
 	})
 
+	t.Run("btoa", func(t *testing.T) {
+		src := `btoa(atob("tacos")) == "tacos"`
+		x, err := JSExec(ctx, src, nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch vv := x.(type) {
+		case bool:
+			if !vv {
+				t.Fatal(vv)
+			}
+		default:
+			t.Fatal(x)
+		}
+	})
+
 }

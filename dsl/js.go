@@ -19,6 +19,7 @@
 package dsl
 
 import (
+	"encoding/base64"
 	"fmt"
 	"time"
 
@@ -59,6 +60,20 @@ func jsExec(ctx *Ctx, src string, env map[string]interface{}) (interface{}, erro
 
 	js.Set("now", func() interface{} {
 		return time.Now().UTC().Format(time.RFC3339Nano)
+	})
+
+	// Base64 encoding
+	js.Set("btoa", func(s string) interface{} {
+		bs, err := base64.StdEncoding.DecodeString(s)
+		if err != nil {
+			panic(js.ToValue(err.Error()))
+		}
+		return string(bs)
+	})
+
+	// Base64 decoding
+	js.Set("atob", func(s string) interface{} {
+		return base64.StdEncoding.EncodeToString([]byte(s))
 	})
 
 	js.Set("match", func(pat, msg interface{}, bs map[string]interface{}) []map[string]interface{} {
