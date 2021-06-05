@@ -563,6 +563,9 @@ single operation.  Currently the following steps are supported:
 	    1. `print`: a function that prints its arguments to log
            output.
 		
+		1. `btoa` and `atob`: functions that base64 decode and encode
+           strings.
+		
 		1. `match`: [Sheen](https://github.com/Comcast/sheens)'s
             [pattern
             matching](https://github.com/Comcast/sheens#pattern-matching)
